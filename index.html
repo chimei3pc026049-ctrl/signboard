@@ -1,322 +1,310 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Calendar, 
-  Users, 
-  PenTool, 
-  FileText, 
-  Send, 
-  Search, 
-  CheckCircle, 
-  Video, 
-  Award,
-  ChevronDown,
-  Building2,
-  TrendingUp,
-  MapPin,
-  ClipboardList
-} from 'lucide-react';
-
-// 資料來源
-const timelineData = [
-  {
-    id: 1,
-    date: "114年6月12日",
-    title: "首次院內討論會議",
-    description: "召集相關部門主管，確立雙語指標優化方向與初步需求盤點。",
-    icon: Users,
-    status: "completed",
-    highlight: false
-  },
-  {
-    id: 2,
-    date: "114年6月26日",
-    title: "邀請寶藝設計公司現場經驗分享",
-    description: "實地走訪院區熱點，由專業設計團隊分享動線引導與材質選用經驗。",
-    icon: PenTool,
-    status: "completed",
-    highlight: false
-  },
-  {
-    id: 3,
-    date: "114年7月18日",
-    title: "寶藝設計公司提供服務計畫書",
-    description: "確認設計規範、施作範圍及預算評估，擬定完整執行策略。",
-    icon: FileText,
-    status: "completed",
-    highlight: false
-  },
-  {
-    id: 4,
-    date: "114年7月25日",
-    title: "向國家發展委員會申請經費",
-    description: "彙整計畫書與效益評估，正式向國發會提出雙語環境優化補助申請。",
-    icon: Send,
-    status: "completed",
-    highlight: false
-  },
-  {
-    id: 5,
-    date: "114年9月15日",
-    title: "國家發展委員會審查會議",
-    description: "針對計畫內容進行報告與答詢，展現佳里奇美醫院提升國際化服務之決心。",
-    icon: Search,
-    status: "completed",
-    highlight: false
-  },
-  {
-    id: 6,
-    date: "114年11月20日",
-    title: "國家發展委員會核定經費50萬元",
-    description: "計畫獲得肯定！成功爭取到補助經費，為專案執行注入強心針。",
-    icon: Award,
-    status: "completed",
-    highlight: true // 重要里程碑
-  },
-  {
-    id: 7,
-    date: "114年11月26日",
-    title: "與寶藝設計公司視訊討論會議",
-    description: "根據核定結果與設計公司對接，細部確認執行期程與設計修正。",
-    icon: Video,
-    status: "completed",
-    highlight: false
-  },
-  {
-    id: 8,
-    date: "114年12月第二週 (預定)",
-    title: "現場詳細盤點",
-    description: "會同設計團隊進行全院實地勘查，逐一確認指標安裝位置、尺寸與數量，確保設計落實無誤。",
-    icon: ClipboardList,
-    status: "active", // 設定為當前最新進度
-    highlight: false
-  }
-];
-
-// 自定義 Hook: 偵測元素是否進入視窗
-const useOnScreen = (ref, rootMargin = "0px") => {
-  const [isIntersecting, setIntersecting] = useState(false);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIntersecting(true);
-          observer.unobserve(entry.target);
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳里奇美醫院環境標示雙語指標專案</title>
+    <!-- 引入 Tailwind CSS (快速排版) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Lucide Icons (圖示) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- 字型設定 -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        
+        /* 動畫效果定義 */
+        .reveal-item {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s ease-out;
         }
-      },
-      { rootMargin }
-    );
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-    return () => {
-      if (ref.current) observer.unobserve(ref.current);
-    };
-  }, [ref, rootMargin]);
-  return isIntersecting;
-};
+        .reveal-item.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .scale-icon {
+            transform: scale(0);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .reveal-item.active .scale-icon {
+            transform: scale(1);
+        }
 
-// 單個時間軸項目組件
-const TimelineItem = ({ item, index, isLast }) => {
-  const ref = useRef(null);
-  const isVisible = useOnScreen(ref, "-50px");
-  const isEven = index % 2 === 0;
-
-  return (
-    <div 
-      ref={ref}
-      className={`relative flex flex-col md:flex-row items-center justify-between w-full mb-12 md:mb-24 transition-all duration-1000 ease-out ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"
-      }`}
-    >
-      {/* 連接線 (Mobile only) */}
-      <div className="absolute left-6 top-10 bottom-[-3rem] w-px bg-slate-200 md:hidden block"></div>
-      {/* 連接線 (Desktop) */}
-      {!isLast && (
-        <div className="absolute left-1/2 top-10 bottom-[-6rem] w-px bg-slate-200 hidden md:block -translate-x-1/2"></div>
-      )}
-
-      {/* 左側內容 */}
-      <div className={`w-full md:w-5/12 pl-16 md:pl-0 ${isEven ? 'md:text-right md:pr-12' : 'md:order-3 md:pl-12'}`}>
-        <div className="md:hidden text-sm font-bold text-teal-600 mb-1 tracking-wider">{item.date}</div>
-        <h3 className={`text-xl font-bold mb-2 ${item.highlight ? 'text-amber-600' : 'text-slate-800'}`}>
-          {item.title}
-        </h3>
-        <p className="text-slate-500 text-sm leading-relaxed shadow-sm bg-white p-4 rounded-xl border border-slate-100 hover:shadow-md transition-shadow">
-          {item.description}
-        </p>
-      </div>
-
-      {/* 中央圖標 */}
-      <div className={`absolute left-0 md:left-1/2 md:-translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full border-4 z-10 shadow-lg transition-transform duration-500 ${isVisible ? 'scale-100' : 'scale-0'} ${
-        item.status === 'active' 
-          ? 'bg-teal-500 border-white ring-4 ring-teal-100 animate-pulse' 
-          : item.highlight 
-            ? 'bg-amber-500 border-white ring-2 ring-amber-50' 
-            : 'bg-white border-teal-500'
-      }`}>
-        <item.icon size={20} className={item.status === 'active' || item.highlight ? 'text-white' : 'text-teal-600'} />
-      </div>
-
-      {/* 右側日期 */}
-      <div className={`w-full md:w-5/12 pl-16 md:pl-0 ${isEven ? 'md:order-3 md:pl-12 md:text-left' : 'md:text-right md:pr-12'}`}>
-         <div className="hidden md:block">
-            <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wide ${
-              item.status === 'active' 
-                ? 'bg-teal-600 text-white shadow-md' 
-                : 'bg-slate-100 text-slate-500'
-            }`}>
-              {item.date}
-            </span>
-            {item.highlight && (
-               <div className="mt-2 text-amber-600 text-xs font-bold flex items-center md:justify-end gap-1 justify-start">
-                  <Award size={14} /> 重大里程碑
-               </div>
-            )}
-         </div>
-      </div>
-    </div>
-  );
-};
-
-const App = () => {
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans selection:bg-teal-100 text-slate-800">
-      
-      {/* New Modern Clean Header */}
-      <header className="relative bg-white pt-20 pb-32 overflow-hidden">
-        {/* 背景裝飾：極簡幾何 */}
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-slate-50 skew-x-12 translate-x-20 z-0"></div>
-        <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-teal-50 mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-64 h-64 rounded-full bg-blue-50 mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto">
-            
-            {/* 標籤 */}
-            <div className="flex items-center gap-3 mb-6">
-              <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-md text-xs font-bold tracking-wider uppercase border border-teal-100">
-                Project 114
-              </span>
-              <span className="flex items-center gap-1 text-slate-400 text-xs font-medium">
-                <MapPin size={12} /> Tainan, Taiwan
-              </span>
-            </div>
-
-            {/* 主標題區 */}
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-6">
-              佳里奇美醫院<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-600">
-                環境標示雙語指標
-              </span>
-              專案
-            </h1>
-            
-            <p className="text-lg md:text-xl text-slate-500 font-light max-w-2xl leading-relaxed mb-10">
-              打造國際級友善就醫環境，透過雙語化視覺系統優化，提升全院動線指引效率與服務品質。
-            </p>
-
-            {/* 現代化數據條 (Stats Bar) */}
-            <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-1 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100">
-              
-              <div className="flex-1 p-5 flex items-center gap-4 hover:bg-slate-50 transition-colors rounded-xl">
-                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <TrendingUp size={24} />
-                </div>
-                <div>
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wider">總里程碑</div>
-                  <div className="text-2xl font-bold text-slate-800">8 <span className="text-sm font-normal text-slate-400">階段</span></div>
-                </div>
-              </div>
-
-              <div className="flex-1 p-5 flex items-center gap-4 hover:bg-slate-50 transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                  <Award size={24} />
-                </div>
-                <div>
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wider">核定經費</div>
-                  <div className="text-2xl font-bold text-slate-800">50 <span className="text-sm font-normal text-slate-400">萬</span></div>
-                </div>
-              </div>
-
-              <div className="flex-1 p-5 flex items-center gap-4 hover:bg-slate-50 transition-colors rounded-xl">
-                <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                  <Building2 size={24} />
-                </div>
-                <div>
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wider">合作夥伴</div>
-                  <div className="text-lg font-bold text-slate-800">寶藝設計</div>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      </header>
-
-      {/* Main Timeline Content */}
-      <main className="container mx-auto px-4 pb-24 -mt-10 relative z-20">
-        {/* 用漸層遮罩讓時間軸與 Header 融合得更好 */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-t-3xl border-t border-l border-r border-white shadow-2xl shadow-slate-200/50 p-6 md:p-16">
-          
-          <div className="flex items-center justify-center gap-4 mb-16 opacity-60">
-             <div className="h-px bg-slate-300 w-12"></div>
-             <span className="text-xs font-bold tracking-[0.2em] text-slate-400 uppercase">Project Timeline</span>
-             <div className="h-px bg-slate-300 w-12"></div>
-          </div>
-
-          <div className="relative max-w-5xl mx-auto">
-             {/* 垂直主軸線 */}
-             <div className="absolute left-1/2 top-0 bottom-0 w-px bg-slate-100 -translate-x-1/2 hidden md:block z-0"></div>
-
-             {timelineData.map((item, index) => (
-               <TimelineItem 
-                 key={item.id} 
-                 item={item} 
-                 index={index} 
-                 isLast={index === timelineData.length - 1} 
-               />
-             ))}
-             
-             {/* Future Step Placeholder */}
-             <div className="flex justify-center mt-12 opacity-40 hover:opacity-100 transition-opacity">
-                <div className="flex flex-col items-center gap-3 text-slate-400">
-                   <div className="w-px h-12 bg-gradient-to-b from-slate-200 to-transparent border-l border-dashed border-slate-300"></div>
-                   <div className="text-xs tracking-widest uppercase">Ongoing</div>
-                </div>
-             </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-100 py-12">
-        <div className="container mx-auto px-6 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4 text-slate-800 font-bold text-lg">
-             <div className="w-2 h-2 rounded-full bg-teal-500"></div>
-             佳里奇美醫院
-          </div>
-          <p className="text-slate-400 text-sm">Jiali Chi Mei Hospital • 企劃組</p>
-        </div>
-      </footer>
-
-      {/* CSS Styles - Fixed */}
-      <style dangerouslySetInnerHTML={{__html: `
+        /* 背景流動動畫 */
         @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
         }
         .animate-blob {
-          animation: blob 7s infinite;
+            animation: blob 7s infinite;
         }
         .animation-delay-2000 {
-          animation-delay: 2s;
+            animation-delay: 2s;
         }
-      `}} />
-    </div>
-  );
-};
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 selection:bg-teal-100">
 
-export default App;
+    <!-- Header 區塊 -->
+    <header class="relative bg-white pt-20 pb-32 overflow-hidden">
+        <!-- 背景裝飾 -->
+        <div class="absolute top-0 right-0 w-1/3 h-full bg-slate-50 skew-x-12 translate-x-20 z-0"></div>
+        <div class="absolute top-20 left-10 w-64 h-64 rounded-full bg-teal-50 mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+        <div class="absolute top-40 right-10 w-64 h-64 rounded-full bg-blue-50 mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="max-w-4xl mx-auto">
+                <!-- 標籤 -->
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="bg-teal-50 text-teal-700 px-3 py-1 rounded-md text-xs font-bold tracking-wider uppercase border border-teal-100">
+                        Project 114
+                    </span>
+                    <span class="flex items-center gap-1 text-slate-400 text-xs font-medium">
+                        <i data-lucide="map-pin" class="w-3 h-3"></i> Tainan, Taiwan
+                    </span>
+                </div>
+
+                <!-- 主標題 -->
+                <h1 class="text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-6">
+                    佳里奇美醫院<br />
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-600">
+                        環境標示雙語指標
+                    </span>
+                    專案
+                </h1>
+                
+                <p class="text-lg md:text-xl text-slate-500 font-light max-w-2xl leading-relaxed mb-10">
+                    打造國際級友善就醫環境，透過雙語化視覺系統優化，提升全院動線指引效率與服務品質。
+                </p>
+
+                <!-- 資訊儀表板 -->
+                <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-1 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                    <!-- 里程碑 -->
+                    <div class="flex-1 p-5 flex items-center gap-4 hover:bg-slate-50 transition-colors rounded-xl">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <div class="text-slate-400 text-xs font-medium uppercase tracking-wider">總里程碑</div>
+                            <div class="text-2xl font-bold text-slate-800">8 <span class="text-sm font-normal text-slate-400">階段</span></div>
+                        </div>
+                    </div>
+                    <!-- 經費 -->
+                    <div class="flex-1 p-5 flex items-center gap-4 hover:bg-slate-50 transition-colors">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="award" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <div class="text-slate-400 text-xs font-medium uppercase tracking-wider">核定經費</div>
+                            <div class="text-2xl font-bold text-slate-800">50 <span class="text-sm font-normal text-slate-400">萬</span></div>
+                        </div>
+                    </div>
+                    <!-- 合作 -->
+                    <div class="flex-1 p-5 flex items-center gap-4 hover:bg-slate-50 transition-colors rounded-xl">
+                        <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="building-2" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <div class="text-slate-400 text-xs font-medium uppercase tracking-wider">合作夥伴</div>
+                            <div class="text-lg font-bold text-slate-800">寶藝設計</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 時間軸內容 -->
+    <main class="container mx-auto px-4 pb-24 -mt-10 relative z-20">
+        <div class="bg-white/80 backdrop-blur-xl rounded-t-3xl border-t border-l border-r border-white shadow-2xl shadow-slate-200/50 p-6 md:p-16">
+            
+            <div class="flex items-center justify-center gap-4 mb-16 opacity-60">
+                <div class="h-px bg-slate-300 w-12"></div>
+                <span class="text-xs font-bold tracking-[0.2em] text-slate-400 uppercase">Project Timeline</span>
+                <div class="h-px bg-slate-300 w-12"></div>
+            </div>
+
+            <div class="relative max-w-5xl mx-auto" id="timeline-container">
+                <!-- 垂直中線 (Desktop) -->
+                <div class="absolute left-1/2 top-0 bottom-0 w-px bg-slate-100 -translate-x-1/2 hidden md:block z-0"></div>
+                
+                <!-- 時間軸項目將由 JavaScript 動態生成 -->
+            </div>
+
+            <!-- 後續 -->
+            <div class="flex justify-center mt-12 opacity-40 hover:opacity-100 transition-opacity">
+                <div class="flex flex-col items-center gap-3 text-slate-400">
+                   <div class="w-px h-12 bg-gradient-to-b from-slate-200 to-transparent border-l border-dashed border-slate-300"></div>
+                   <div class="text-xs tracking-widest uppercase">Ongoing</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="bg-white border-t border-slate-100 py-12">
+        <div class="container mx-auto px-6 text-center">
+            <div class="flex items-center justify-center gap-2 mb-4 text-slate-800 font-bold text-lg">
+                <div class="w-2 h-2 rounded-full bg-teal-500"></div>
+                佳里奇美醫院
+            </div>
+            <p class="text-slate-400 text-sm">Jiali Chi Mei Hospital • 總務室/企劃部門</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript 邏輯 -->
+    <script>
+        // 資料設定
+        const timelineData = [
+            {
+                date: "114年6月12日",
+                title: "首次院內討論會議",
+                description: "召集相關部門主管，確立雙語指標優化方向與初步需求盤點。",
+                icon: "users",
+                status: "completed",
+                highlight: false
+            },
+            {
+                date: "114年6月26日",
+                title: "邀請寶藝設計公司現場經驗分享",
+                description: "實地走訪院區熱點，由專業設計團隊分享動線引導與材質選用經驗。",
+                icon: "pen-tool",
+                status: "completed",
+                highlight: false
+            },
+            {
+                date: "114年7月18日",
+                title: "寶藝設計公司提供服務計畫書",
+                description: "確認設計規範、施作範圍及預算評估，擬定完整執行策略。",
+                icon: "file-text",
+                status: "completed",
+                highlight: false
+            },
+            {
+                date: "114年7月25日",
+                title: "向國家發展委員會申請經費",
+                description: "彙整計畫書與效益評估，正式向國發會提出雙語環境優化補助申請。",
+                icon: "send",
+                status: "completed",
+                highlight: false
+            },
+            {
+                date: "114年9月15日",
+                title: "國家發展委員會審查會議",
+                description: "針對計畫內容進行報告與答詢，展現佳里奇美醫院提升國際化服務之決心。",
+                icon: "search",
+                status: "completed",
+                highlight: false
+            },
+            {
+                date: "114年11月20日",
+                title: "國家發展委員會核定經費50萬元",
+                description: "計畫獲得肯定！成功爭取到補助經費，為專案執行注入強心針。",
+                icon: "award",
+                status: "completed",
+                highlight: true
+            },
+            {
+                date: "114年11月26日",
+                title: "與寶藝設計公司視訊討論會議",
+                description: "根據核定結果與設計公司對接，細部確認執行期程與設計修正。",
+                icon: "video",
+                status: "completed",
+                highlight: false
+            },
+            {
+                date: "114年12月第二週 (預定)",
+                title: "現場詳細盤點",
+                description: "會同設計團隊進行全院實地勘查，逐一確認指標安裝位置、尺寸與數量，確保設計落實無誤。",
+                icon: "clipboard-list",
+                status: "active",
+                highlight: false
+            }
+        ];
+
+        const container = document.getElementById('timeline-container');
+
+        // 生成 HTML 內容
+        timelineData.forEach((item, index) => {
+            const isEven = index % 2 === 0;
+            const isLast = index === timelineData.length - 1;
+            
+            // 判斷樣式
+            const iconBgClass = item.status === 'active' 
+                ? 'bg-teal-500 border-white ring-4 ring-teal-100 animate-pulse text-white' 
+                : item.highlight 
+                    ? 'bg-amber-500 border-white ring-2 ring-amber-50 text-white' 
+                    : 'bg-white border-teal-500 text-teal-600';
+            
+            const titleClass = item.highlight ? 'text-amber-600' : 'text-slate-800';
+            const dateBadgeClass = item.status === 'active' 
+                ? 'bg-teal-600 text-white shadow-md' 
+                : 'bg-slate-100 text-slate-500';
+
+            // HTML 結構
+            const html = `
+                <div class="reveal-item relative flex flex-col md:flex-row items-center justify-between w-full mb-12 md:mb-24">
+                    <!-- 連接線 (Mobile) -->
+                    <div class="absolute left-6 top-10 bottom-[-3rem] w-px bg-slate-200 md:hidden block"></div>
+                    <!-- 連接線 (Desktop) -->
+                    ${!isLast ? '<div class="absolute left-1/2 top-10 bottom-[-6rem] w-px bg-slate-200 hidden md:block -translate-x-1/2"></div>' : ''}
+
+                    <!-- 左側區塊 -->
+                    <div class="w-full md:w-5/12 pl-16 md:pl-0 ${isEven ? 'md:text-right md:pr-12' : 'md:order-3 md:pl-12'}">
+                        <div class="md:hidden text-sm font-bold text-teal-600 mb-1 tracking-wider">${item.date}</div>
+                        <h3 class="text-xl font-bold mb-2 ${titleClass}">${item.title}</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed shadow-sm bg-white p-4 rounded-xl border border-slate-100 hover:shadow-md transition-shadow">
+                            ${item.description}
+                        </p>
+                    </div>
+
+                    <!-- 中央圖標 -->
+                    <div class="scale-icon absolute left-0 md:left-1/2 md:-translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full border-4 z-10 shadow-lg ${iconBgClass}">
+                        <i data-lucide="${item.icon}" class="w-5 h-5"></i>
+                    </div>
+
+                    <!-- 右側區塊 (日期) -->
+                    <div class="w-full md:w-5/12 pl-16 md:pl-0 ${isEven ? 'md:order-3 md:pl-12 md:text-left' : 'md:text-right md:pr-12'}">
+                        <div class="hidden md:block">
+                            <span class="inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wide ${dateBadgeClass}">
+                                ${item.date}
+                            </span>
+                            ${item.highlight ? `
+                                <div class="mt-2 text-amber-600 text-xs font-bold flex items-center ${isEven ? 'justify-start' : 'justify-end'} gap-1">
+                                    <i data-lucide="award" class="w-3 h-3"></i> 重大里程碑
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+
+        // 啟動圖標庫
+        lucide.createIcons();
+
+        // 滾動偵測 (Intersection Observer)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // 動畫只跑一次
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        });
+
+        document.querySelectorAll('.reveal-item').forEach(item => {
+            observer.observe(item);
+        });
+
+    </script>
+</body>
+</html>
